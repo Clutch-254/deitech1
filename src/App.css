@@ -17,7 +17,45 @@
   font-size: 1.875rem;
   color: #1e293b;
   margin: 0;
+  flex-shrink: 0;
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem; /* Left padding for icon */
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25);
+}
+
 
 .add-product-btn {
   display: inline-flex;
@@ -32,11 +70,43 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  white-space: nowrap;
 }
-
 .add-product-btn:hover {
   background-color: #4338ca;
 }
+.add-product-btn span {
+  display: block;
+}
+
+
+/* Breadcrumbs */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  color: #475569;
+}
+.breadcrumbs button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+  color: #475569;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+.breadcrumbs button:hover {
+  text-decoration: underline;
+  color: #4f46e5;
+}
+.breadcrumbs svg {
+  color: #94a3b8;
+}
+
 
 /* Modal Styles */
 .form-modal-overlay {
@@ -51,7 +121,6 @@
   align-items: center;
   z-index: 1000;
 }
-
 .form-modal {
   background-color: white;
   border-radius: 0.75rem;
@@ -62,7 +131,6 @@
   display: flex;
   flex-direction: column;
 }
-
 .form-modal-header {
   display: flex;
   justify-content: space-between;
@@ -70,13 +138,11 @@
   padding: 1.5rem;
   border-bottom: 1px solid #e2e8f0;
 }
-
 .form-modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
   color: #1e293b;
 }
-
 .close-btn {
   background: none;
   border: none;

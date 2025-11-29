@@ -33,7 +33,8 @@ const ProductList = ({ products }) => {
               <th>Product Name</th>
               <th>SKU</th>
               <th>Batch Number</th>
-              <th>Category</th>
+              <th>Product Type</th>
+              <th>Variant</th>
               <th>Brand</th>
               <th>Status</th>
               <th>Actions</th>
@@ -45,7 +46,8 @@ const ProductList = ({ products }) => {
                 <td>{product.productName}</td>
                 <td>{product.sku}</td>
                 <td>{product.batchNumber}</td>
-                <td>{product.category}</td>
+                <td>{product.productType}</td>
+                <td>{product.variant}</td>
                 <td>{product.brand}</td>
                 <td>
                   <StatusBadge status={product.status} />
