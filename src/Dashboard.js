@@ -2,7 +2,12 @@ import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import './Dashboard.css';
 
-const Dashboard = ({ categories, onNavigate }) => {
+const Dashboard = ({ categories, onNavigate, products = [] }) => {
+  // Calculate product count per category
+  const getCategoryCount = (category) => {
+    return products.filter(p => p.category === category).length;
+  };
+
   return (
     <div className="category-grid">
       {categories.map((category) => (
@@ -11,7 +16,10 @@ const Dashboard = ({ categories, onNavigate }) => {
           className="category-card"
           onClick={() => onNavigate(category)}
         >
-          <span>{category}</span>
+          <div>
+            <span>{category}</span>
+            <div className="category-count">{getCategoryCount(category)} products</div>
+          </div>
           <ChevronRight />
         </button>
       ))}

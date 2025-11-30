@@ -1,4 +1,5 @@
 import React from 'react';
+import { Trash2 } from 'lucide-react';
 import './ProductGrid.css';
 
 const StatusBadge = ({ status }) => {
@@ -20,7 +21,7 @@ const StatusBadge = ({ status }) => {
 };
 
 
-const ProductGrid = ({ products }) => {
+const ProductGrid = ({ products, onEdit, onDelete }) => {
   if (!products || products.length === 0) {
     return <div className="card"><p>No products found for this selection.</p></div>;
   }
@@ -40,7 +41,11 @@ const ProductGrid = ({ products }) => {
             <p><strong>Quantity:</strong> {product.quantity}{product.unit}</p>
           </div>
           <div className="product-card-footer">
-            <button className="action-btn">Edit</button>
+            <button className="action-btn" onClick={() => onEdit(product)}>Edit</button>
+            <button className="action-btn delete-btn" onClick={() => onDelete(product.id)}>
+              <Trash2 size={16} />
+              Delete
+            </button>
           </div>
         </div>
       ))}

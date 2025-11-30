@@ -23,7 +23,7 @@
 
 .category-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border-color: #4f46e5;
   color: #4f46e5;
 }
@@ -34,4 +34,11 @@
 
 .category-card:hover svg {
   transform: translateX(5px);
+}
+
+.category-count {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #64748b;
+  margin-top: 0.25rem;
 }

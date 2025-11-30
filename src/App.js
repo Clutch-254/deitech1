@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Plus, X, Search, ChevronRight } from 'lucide-react';
+import { Plus, X, Search, ChevronRight, Download } from 'lucide-react';
 import ProductForm from './ProductForm';
 import Dashboard from './Dashboard';
 import CategoryView from './CategoryView';
 import ProductGrid from './ProductGrid';
+import API from './utils/api';
+import { exportToCSV } from './utils/exportCSV';
 
 // Overhauled data structure for a hierarchical system
 const initialProducts = [
@@ -61,7 +63,7 @@ const initialProducts = [
     unit: 'g',
     status: 'Approved',
   },
-    {
+  {
     id: 6,
     category: 'Soaps',
     brand: 'Flamingo',
@@ -139,7 +141,7 @@ const initialProducts = [
     unit: 'g',
     status: 'Draft',
   },
-    {
+  {
     id: 9,
     category: 'Soaps',
     brand: 'Carex',
@@ -323,7 +325,7 @@ const initialProducts = [
     unit: 'g',
     status: 'In Review',
   },
-    {
+  {
     id: 19,
     category: 'Cussons Baby',
     brand: 'Cussons Baby',
@@ -537,13 +539,34 @@ const initialProducts = [
 
 
 function App() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
+
   // State to manage navigation hierarchy
-  // path: ['Soaps', 'Imperial Leather']
-  const [path, setPath] = useState([]); 
+  const [path, setPath] = useState([]);
+
+  // Fetch products from backend
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await API.getProducts();
+      setProducts(data.products || []);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching products:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const navigateTo = (newPath) => {
     setPath([...path, newPath]);
@@ -552,13 +575,51 @@ function App() {
   const navigateBack = (index) => {
     setPath(path.slice(0, index + 1));
   };
-  
+
   const resetNav = () => setPath([]);
 
-  const addProduct = (newProduct) => {
-    const productWithId = { ...newProduct, id: products.length + 1 };
-    setProducts([...products, productWithId]);
-    setIsFormVisible(false);
+  const addProduct = async (newProduct) => {
+    try {
+      const data = await API.createProduct(newProduct);
+      setProducts([...products, data.product]);
+      setIsFormVisible(false);
+      setEditingProduct(null);
+    } catch (err) {
+      alert('Error creating product: ' + err.message);
+    }
+  };
+
+  const updateProduct = async (updatedProduct) => {
+    try {
+      const data = await API.updateProduct(editingProduct.id, updatedProduct);
+      setProducts(products.map(p => p.id === editingProduct.id ? data.product : p));
+      setIsFormVisible(false);
+      setEditingProduct(null);
+    } catch (err) {
+      alert('Error updating product: ' + err.message);
+    }
+  };
+
+  const deleteProduct = async (productId) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
+
+    try {
+      await API.deleteProduct(productId);
+      setProducts(products.filter(p => p.id !== productId));
+    } catch (err) {
+      alert('Error deleting product: ' + err.message);
+    }
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setIsFormVisible(true);
+  };
+
+  const handleExportCSV = () => {
+    exportToCSV(currentProducts, 'products-export.csv');
   };
 
   // --- Data Filtering Logic ---
@@ -566,9 +627,9 @@ function App() {
   let viewLevel = path.length;
 
   if (searchQuery) {
-    currentProducts = products.filter(p => 
-        p.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.batchNumber.toLowerCase().includes(searchQuery.toLowerCase())
+    currentProducts = products.filter(p =>
+      p.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.batchNumber.toLowerCase().includes(searchQuery.toLowerCase())
     );
   } else {
     path.forEach((segment, index) => {
@@ -586,7 +647,7 @@ function App() {
       if (index === 2) { // Third level: Variant/Flavor
         currentProducts = currentProducts.filter(p => p.variant === segment);
       }
-       if (index === 3) { // Fourth level: Quantity
+      if (index === 3) { // Fourth level: Quantity
         const [quantity, unit] = segment.split(' ');
         currentProducts = currentProducts.filter(
           p => p.quantity === parseInt(quantity, 10) && p.unit === unit
@@ -596,15 +657,23 @@ function App() {
   }
 
   const renderContent = () => {
-    if (searchQuery) {
-      return <ProductGrid products={currentProducts} />;
+    if (loading) {
+      return <div className="loading">Loading products...</div>;
     }
-    
+
+    if (error) {
+      return <div className="error">Error: {error}</div>;
+    }
+
+    if (searchQuery) {
+      return <ProductGrid products={currentProducts} onEdit={handleEditProduct} onDelete={deleteProduct} />;
+    }
+
     switch (viewLevel) {
       case 0: // Dashboard
         const topLevelCategories = [...new Set(products.map(p => p.category))];
-        return <Dashboard categories={topLevelCategories} onNavigate={navigateTo} />;
-      
+        return <Dashboard categories={topLevelCategories} onNavigate={navigateTo} products={products} />;
+
       case 1: // Sub-category view
         const parentCategory = path[0];
         let subCategories;
@@ -613,8 +682,7 @@ function App() {
         } else if (parentCategory === 'Dishwashing' || parentCategory === 'Cussons Baby') {
           subCategories = [...new Set(currentProducts.map(p => p.productType))];
         } else {
-          // Default to showing products if no specific sub-category logic
-          return <ProductGrid products={currentProducts} />;
+          return <ProductGrid products={currentProducts} onEdit={handleEditProduct} onDelete={deleteProduct} />;
         }
         return <CategoryView categories={subCategories} onNavigate={navigateTo} />;
 
@@ -628,7 +696,7 @@ function App() {
 
       case 4: // Product grid view
       default:
-        return <ProductGrid products={currentProducts} />;
+        return <ProductGrid products={currentProducts} onEdit={handleEditProduct} onDelete={deleteProduct} />;
     }
   };
 
@@ -647,7 +715,11 @@ function App() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button className="add-product-btn" onClick={() => setIsFormVisible(true)}>
+          <button className="export-btn" onClick={handleExportCSV} title="Export to CSV">
+            <Download size={20} />
+            <span>Export CSV</span>
+          </button>
+          <button className="add-product-btn" onClick={() => { setEditingProduct(null); setIsFormVisible(true); }}>
             <Plus size={20} />
             <span>Add Product</span>
           </button>
@@ -658,16 +730,19 @@ function App() {
         <div className="form-modal-overlay">
           <div className="form-modal">
             <div className="form-modal-header">
-              <h2>Add a New Product</h2>
-              <button className="close-btn" onClick={() => setIsFormVisible(false)}>
+              <h2>{editingProduct ? 'Edit Product' : 'Add a New Product'}</h2>
+              <button className="close-btn" onClick={() => { setIsFormVisible(false); setEditingProduct(null); }}>
                 <X size={24} />
               </button>
             </div>
-            <ProductForm onAddProduct={addProduct} />
+            <ProductForm
+              onAddProduct={editingProduct ? updateProduct : addProduct}
+              initialData={editingProduct}
+            />
           </div>
         </div>
       )}
-      
+
       <nav className="breadcrumbs">
         <button onClick={resetNav}>Home</button>
         {path.map((segment, index) => (

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ProductForm.css';
 
-const ProductForm = ({ onAddProduct }) => {
+const ProductForm = ({ onAddProduct, initialData }) => {
   const [formData, setFormData] = useState({
     productName: '',
     sku: '',
@@ -9,10 +9,29 @@ const ProductForm = ({ onAddProduct }) => {
     productType: '',
     variant: '',
     brand: '',
+    category: '', // Added category field
     status: 'Draft', // Default status
     quantity: '',
     unit: 'g',
   });
+
+  // Populate form when editing
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        productName: initialData.productName || '',
+        sku: initialData.sku || '',
+        batchNumber: initialData.batchNumber || '',
+        productType: initialData.productType || '',
+        variant: initialData.variant || '',
+        brand: initialData.brand || '',
+        category: initialData.category || '',
+        status: initialData.status || 'Draft',
+        quantity: initialData.quantity || '',
+        unit: initialData.unit || 'g',
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,6 +56,7 @@ const ProductForm = ({ onAddProduct }) => {
       productType: '',
       variant: '',
       brand: '',
+      category: '',
       status: 'Draft',
       quantity: '',
       unit: 'g',
@@ -46,6 +66,23 @@ const ProductForm = ({ onAddProduct }) => {
   return (
     <form onSubmit={handleSubmit} className="product-form">
       <div className="form-grid">
+        <div className="form-group">
+          <label htmlFor="category">Category</label>
+          <select
+            id="category"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Select a category</option>
+            <option value="Soaps">Soaps</option>
+            <option value="Dishwashing">Dishwashing</option>
+            <option value="Cussons Baby">Cussons Baby</option>
+            <option value="Hand Wash">Hand Wash</option>
+            <option value="Bodywash">Bodywash</option>
+          </select>
+        </div>
         <div className="form-group">
           <label htmlFor="productName">Product Name</label>
           <input
